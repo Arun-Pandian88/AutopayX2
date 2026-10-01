@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+apps/web/.next/
+apps/web/out/
+apps/api/storage/logs/*
+!apps/api/storage/logs/.gitkeep
+apps/api/storage/framework/cache/*
+!apps/api/storage/framework/cache/.gitkeep
+apps/api/storage/framework/sessions/*
+!apps/api/storage/framework/sessions/.gitkeep
+apps/api/storage/framework/views/*
+!apps/api/storage/framework/views/.gitkeep
+apps/api/bootstrap/cache/*
+!apps/api/bootstrap/cache/.gitkeep
+
+# Docker
+docker/data/
+
+# Coverage
+coverage/
+.phpunit.result.cache
+
+# Compiled assets
+apps/api/public/hot
+apps/api/public/build/
+
+# Generated types
+apps/web/src/lib/api/generated/

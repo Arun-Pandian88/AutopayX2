@@ -1,0 +1,165 @@
+'use client';
+
+import Link from 'next/link';
+import { ArrowLeft, ShieldCheck, Lock, Database } from 'lucide-react';
+
+export default function PrivacyPolicy() {
+  return (
+    <div className="min-h-screen bg-[#0D0518] text-white font-sans selection:bg-[#6C3FE2]/30 selection:text-[#6C3FE2] flex flex-col relative overflow-hidden">
+
+      {/* Background Gradients */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#6C3FE2]/10 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+      <div className="absolute bottom-0 left-[-10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full z-50 bg-[#0D0518]/90 backdrop-blur-md border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <Link href="/" className="flex items-center group hover:opacity-90 transition-opacity">
+            <div className="bg-white rounded-xl p-1.5 mr-3 shadow-md flex items-center justify-center">
+              <img src="/autopayx-icon.png" alt="AutoPayX Icon" className="h-8 w-8 object-contain" />
+            </div>
+            <img src="/autopayx-logo.png" alt="AutoPayX" className="h-20 object-contain mt-0.5 brightness-0 invert" />
+          </Link>
+
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center text-sm font-medium text-white/80 hover:text-white transition-colors group">
+              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Home
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="flex-1 pt-32 pb-24 px-6 relative z-10">
+        <div className="max-w-4xl mx-auto">
+
+          <div className="mb-16">
+            <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">Privacy Policy</h1>
+            <p className="text-[#A880FF] font-medium text-lg">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+          </div>
+
+          <div className="space-y-8 text-lg text-gray-300">
+
+            <p className="text-xl font-medium mb-10 text-gray-200">
+              At AutoPayX, we take your privacy and the security of your data extremely seriously. This Privacy Policy outlines how we collect, use, and protect your information when you use our payment infrastructure and services.
+            </p>
+
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 mb-12 flex flex-col md:flex-row gap-8">
+              <div className="flex-1">
+                <ShieldCheck className="w-10 h-10 text-[#6C3FE2] mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2 mt-0">Bank-Grade Security</h3>
+                <p className="text-sm text-gray-400 m-0">All data is encrypted in transit and at rest using AES-256 and TLS 1.3 protocols.</p>
+              </div>
+              <div className="flex-1">
+                <Lock className="w-10 h-10 text-[#6C3FE2] mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2 mt-0">Strict Access Control</h3>
+                <p className="text-sm text-gray-400 m-0">Your financial data is never shared with unauthorized third parties.</p>
+              </div>
+              <div className="flex-1">
+                <Database className="w-10 h-10 text-[#6C3FE2] mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2 mt-0">Data Localization</h3>
+                <p className="text-sm text-gray-400 m-0">All Indian merchant and user data is stored strictly within India.</p>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black text-white mb-4">1. Information We Collect</h2>
+              <p className="mb-4">We collect several different types of information for various purposes to provide and improve our Service to you:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-400">
+                <li><strong className="text-white">Personal Data:</strong> While using our Service, we may ask you to provide us with certain personally identifiable information, including but not limited to your Email address, First name and Last name, Phone number, and Business details.</li>
+                <li><strong className="text-white">Financial Information:</strong> To process payments, we collect KYC documents, bank account details for settlements, and transaction history. (Note: We do not store payer UPI PINs or passwords).</li>
+                <li><strong className="text-white">Usage Data:</strong> We automatically collect data generated by the use of the Service, such as IP addresses, browser types, device identifiers, and timestamps.</li>
+              </ul>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black text-white mb-4">2. How We Use Your Information</h2>
+              <p className="mb-4">AutoPayX uses the collected data for various purposes:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-400">
+                <li>To provide and maintain our payment infrastructure.</li>
+                <li>To process transactions securely via the UPI network and partner banks.</li>
+                <li>To notify you about changes to our Service.</li>
+                <li>To provide customer support and merchant assistance.</li>
+                <li>To detect, prevent, and address fraud, money laundering, and technical issues.</li>
+                <li>To comply with legal and regulatory requirements from the RBI and NPCI.</li>
+              </ul>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black text-white mb-4">3. Data Sharing and Disclosure</h2>
+              <p className="mb-4">We do not sell your personal data. However, we may share your information with:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-400">
+                <li><strong className="text-white">Banking Partners & NPCI:</strong> For the sole purpose of authorizing and processing UPI transactions and settlements.</li>
+                <li><strong className="text-white">Service Providers:</strong> Trusted third-party companies who assist us in operating our infrastructure (e.g., cloud hosting in AWS Mumbai region).</li>
+                <li><strong className="text-white">Law Enforcement:</strong> If required by law or in response to valid requests by public authorities (e.g., cyber cell investigations).</li>
+              </ul>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black text-white mb-4">4. Data Security</h2>
+              <p className="mb-4 text-gray-400">
+                The security of your data is paramount. AutoPayX employs bank-level security architectures. We use industry-standard encryption, strict access controls, and regular independent security audits. However, remember that no method of transmission over the Internet or electronic storage is 100% secure.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black text-white mb-4">5. Your Data Rights</h2>
+              <p className="mb-4">Depending on your jurisdiction, you have the right to:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-400">
+                <li>Access and update your personal and business information.</li>
+                <li>Request deletion of your account (subject to regulatory data retention periods for financial records).</li>
+                <li>Opt-out of marketing communications.</li>
+              </ul>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black text-white mb-4">6. Changes to This Privacy Policy</h2>
+              <p className="mb-4 text-gray-400">
+                We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date at the top.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-black text-white mb-4">7. Contact Us</h2>
+              <p className="mb-4 text-gray-400">
+                If you have any questions about this Privacy Policy or how we handle your data, please contact our Grievance Officer:
+                <br /><br />
+                <strong className="text-white">Email:</strong> <a href="mailto:privacy@autopayx.in" className="text-[#6C3FE2] hover:text-[#A880FF] transition-colors">privacy@autopayx.in</a><br />
+                <strong className="text-white">Phone:</strong> +91 7603917369<br />
+                <strong className="text-white">Address:</strong> AutoPayX Inc, Vakkanangundu,Virudhunagar District, India.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-16 px-6 bg-[#0a0413]">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
+            <div className="flex items-center mb-6 md:mb-0">
+              <div className="bg-white rounded-xl p-1.5 mr-3 shadow-md flex items-center justify-center">
+                <img src="/autopayx-icon.png" alt="AutoPayX Icon" className="h-8 w-8 object-contain" />
+              </div>
+              <img src="/autopayx-logo.png" alt="AutoPayX" className="h-20 object-contain mt-0.5 brightness-0 invert" />
+              <span className="hidden md:inline text-[#A880FF] font-medium text-sm ml-5 border-l border-white/10 pl-5">Payment infrastructure built for ambitious Indian businesses.</span>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-8 text-sm font-bold text-white/60">
+              <Link href="/" className="hover:text-white transition-colors">Home</Link>
+              <Link href="/docs" className="hover:text-white transition-colors">API Docs</Link>
+              <Link href="/privacy-policy" className="text-white transition-colors">Privacy Policy</Link>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-sm font-medium text-white/40 text-center sm:text-left">
+              © {new Date().getFullYear()} AutoPayX Inc. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
