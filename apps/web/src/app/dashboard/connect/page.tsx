@@ -38,10 +38,11 @@ export default function ConnectAccountsPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setAllSettings(data);
+        const settingsArray = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+        setAllSettings(settingsArray);
         
         // Find setting for current app
-        const appSetting = data.find((s: any) => s.app_name === paymentApp);
+        const appSetting = settingsArray.find((s: any) => s.app_name === paymentApp);
         if (appSetting) {
           setMasterUpi(appSetting.master_upi_id || '');
           setUpiNumber(appSetting.upi_number || '');
@@ -622,7 +623,8 @@ export default function ConnectAccountsPage() {
 
         <div className="space-y-3">
           {apps.map(app => {
-            const appSetting = allSettings.find((s: any) => s.app_name === app);
+            const settingsList = Array.isArray(allSettings) ? allSettings : [];
+            const appSetting = settingsList.find((s: any) => s.app_name === app);
             const isAppConnected = appSetting?.is_connected || false;
             const appMasterUpi = appSetting?.master_upi_id || '';
             
