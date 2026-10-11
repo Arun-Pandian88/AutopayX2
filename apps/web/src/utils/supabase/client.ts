@@ -1,10 +1,14 @@
 import { createBrowserClient } from '@supabase/ssr';
 
-export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+export const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  'https://ggoioszarjpxnboaufos.supabase.co';
 
-  return createBrowserClient(supabaseUrl, supabaseKey);
+export const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  'sb_publishable_BX3V3qCiJHAHK18_l7ajZw_Km9HJoU4';
+
+export function createClient() {
+  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }

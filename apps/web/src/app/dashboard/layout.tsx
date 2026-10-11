@@ -10,6 +10,8 @@ import ExportButton from '@/components/ExportButton';
 import PlanStatusWidget from '@/components/PlanStatusWidget';
 import ModeToggle from '@/components/ModeToggle';
 
+export const dynamic = 'force-dynamic';
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <UserProvider>

@@ -145,7 +145,14 @@ CREATE TABLE IF NOT EXISTS public.webhook_endpoints (
 -- 9. Checkout Themes
 CREATE TABLE IF NOT EXISTS public.checkout_themes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  merchant_id UUID UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
+  user_id UUID UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  merchant_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  theme_id TEXT DEFAULT 'winter_wonder',
+  business_name TEXT DEFAULT 'AutoPayX',
+  brand_color TEXT DEFAULT '#244531',
+  brand_logo TEXT DEFAULT 'A',
+  logo_type TEXT DEFAULT 'text',
+  background_image TEXT DEFAULT 'festive_pattern_bg.jpg',
   primary_color TEXT DEFAULT '#6C3FE2',
   background_color TEXT DEFAULT '#FFFFFF',
   logo_url TEXT,
