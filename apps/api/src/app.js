@@ -58,7 +58,7 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://192.168.') || origin.startsWith('http://10.')) {
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.startsWith('http://192.168.') || origin.startsWith('http://10.')) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS (Bank-level strict origin policy)'));

@@ -22,7 +22,13 @@ const server = http.createServer(app);
 // 3. Initialize WebSockets (Socket.io)
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      if (!origin || origin === process.env.FRONTEND_URL || origin.endsWith('.vercel.app') || origin.includes('localhost') || origin.startsWith('http://192.168.') || origin.startsWith('http://10.')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   }
 });
