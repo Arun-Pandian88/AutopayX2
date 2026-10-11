@@ -3,9 +3,6 @@ import type { NextConfig } from "next";
 const API_BASE_URL = process.env.API_URL || 'http://127.0.0.1:8000';
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },

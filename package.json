@@ -18,6 +18,7 @@
     "dottie": "^2.0.8",
     "uuid": "^11.0.0",
     "eslint": "^9.11.0",
-    "xss-clean": "npm:dompurify@^3.1.6"
+    "xss-clean": "npm:dompurify@^3.1.6",
+    "glob": "^10.4.5"
   }
 }
