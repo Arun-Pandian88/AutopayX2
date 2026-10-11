@@ -1,0 +1,56 @@
+require('dotenv').config({ path: 'C:/Users/Arun/OneDrive/Documents/AutopayX/apps/api/.env' });
+const imap = require('imap-simple');
+const simpleParser = require('mailparser').simpleParser;
+
+async function checkLatestBankEmail() {
+  const config = {
+    imap: {
+      user: process.env.IMAP_USER,
+      password: process.env.IMAP_PASSWORD,
+      host: process.env.IMAP_HOST || 'imap.gmail.com',
+      port: 993,
+      tls: true,
+      authTimeout: 10000,
+      tlsOptions: { rejectUnauthorized: false }
+    }
+  };
+
+  try {
+    const connection = await imap.connect(config);
+    await connection.openBox('INBOX');
+    
+    // Fetch emails from today only to be faster
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const searchCriteria = [['SINCE', today]];
+    const fetchOptions = { bodies: [''], markSeen: false };
+    
+    let messages = await connection.search(searchCriteria, fetchOptions);
+    messages = messages.slice(-10);
+    
+    console.log(`Found ${messages.length} recent emails. Checking...`);
+    for (const item of messages) {
+      const all = item.parts.find(p => p.which === '');
+      if (!all) continue;
+      
+      const mail = await simpleParser(all.body);
+      const text = mail.text || mail.html || '';
+      console.log("=========================================");
+      console.log("SUBJECT:", mail.subject);
+      console.log("DATE:", mail.date);
+      
+      let utrMatch = text.match(/(?:UPI Ref No|UTR|Ref no|UPI ID|Reference No|Ref\. No)[\s:-]*(\d{12})/i);
+      let amountMatch = text.match(/(?:Rs\.?|INR)[\s]*([0-9,]+(?:\.[0-9]{2})?)/i);
+      console.log("Regex Amount Match:", amountMatch ? amountMatch[1] : null);
+      
+      if (mail.subject && (mail.subject.toLowerCase().includes('received') || mail.subject.toLowerCase().includes('sent') || mail.subject.toLowerCase().includes('payment') || mail.subject.toLowerCase().includes('credit') || mail.subject.toLowerCase().includes('debit'))) {
+         console.log("TEXT PREVIEW:", text.substring(0, 300).replace(/\s+/g, ' '));
+      }
+    }
+    
+    connection.end();
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+checkLatestBankEmail();

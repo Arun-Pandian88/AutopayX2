@@ -23,7 +23,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const fetchUser = async (retries = 3) => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/dashboard/me`, {
+        const res = await fetch(`/api/dashboard/me`, {
           credentials: 'include',
         });
         

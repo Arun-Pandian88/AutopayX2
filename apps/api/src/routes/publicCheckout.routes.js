@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
 // Rate limit for public checkout (prevent abuse)
 const checkoutLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30, // 30 requests per 15 mins per IP
+  max: 3000, // 3000 requests per 15 mins per IP (Increased for Dev Testing)
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many requests, please try again later.' }
@@ -16,5 +16,7 @@ const checkoutLimiter = rateLimit({
 router.get('/:link_id', checkoutLimiter, publicCheckoutController.getCheckoutDetails);
 router.post('/:link_id/initiate', checkoutLimiter, publicCheckoutController.initiatePayment);
 router.get('/:link_id/status/:txn_id', publicCheckoutController.checkStatus);
+
+router.post('/:link_id/simulate/:txn_id', publicCheckoutController.simulatePayment);
 
 module.exports = router;

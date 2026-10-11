@@ -23,7 +23,7 @@ export default function SystemLogs() {
   // Fetch real logs from API
   const fetchLogs = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/superadmin/logs`, {
+      const res = await fetch(`/api/superadmin/logs`, {
         credentials: 'include',
       });
       if (res.ok) {

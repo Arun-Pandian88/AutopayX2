@@ -11,16 +11,17 @@ exports.getSettings = async (req, res) => {
 };
 
 exports.saveMasterDetails = async (req, res) => {
-  const { app_name, master_upi_id, upi_number, payee_name } = req.body;
+  const { app_name, master_upi_id, upi_number, payee_name, merchant_id } = req.body;
   try {
     const [setting, created] = await PaymentSetting.findOrCreate({
       where: { user_id: req.user.id, app_name },
-      defaults: { master_upi_id, upi_number, payee_name }
+      defaults: { master_upi_id, upi_number, payee_name, merchant_id }
     });
     if (!created) {
       setting.master_upi_id = master_upi_id;
       setting.upi_number = upi_number;
       setting.payee_name = payee_name;
+      setting.merchant_id = merchant_id;
       await setting.save();
     }
     res.json({ message: 'Details saved successfully', setting });

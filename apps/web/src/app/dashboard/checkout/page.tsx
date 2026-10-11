@@ -30,7 +30,7 @@ export default function CheckoutThemePage() {
 
   const fetchTheme = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/checkout`, {
+      const res = await fetch(`/api/checkout`, {
         credentials: 'include'
       });
       if (res.ok) {
@@ -52,7 +52,7 @@ export default function CheckoutThemePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/checkout`, {
+      await fetch(`/api/checkout`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

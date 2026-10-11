@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { User, Shield, Bell, CreditCard, Key, Smartphone, Mail, Lock, Camera, Check, Loader2 } from 'lucide-react';
+import { User, Shield, Bell, CreditCard, Key, Smartphone, Mail, Lock, Camera, Check, Loader2, Eye, EyeOff, LogOut } from 'lucide-react';
 import PageBanner, { bannerConfigs } from '@/components/PageBanner';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = '';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -24,6 +24,7 @@ export default function SettingsPage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [pwdError, setPwdError] = useState('');
   const [pwdSuccess, setPwdSuccess] = useState('');
+  const [showPasswords, setShowPasswords] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -141,6 +142,18 @@ export default function SettingsPage() {
     }
   };
 
+    const handleLogout = async () => {
+    try {
+      await fetch(`${API_URL}/api/dashboard/logout`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        credentials: 'include',
+      });
+    } catch (e) {}
+    document.cookie = 'user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    window.location.href = '/login';
+  };
+
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPwdError('All fields are required');
@@ -232,6 +245,16 @@ export default function SettingsPage() {
             <CreditCard className="w-4 h-4 mr-3" />
             Billing & Invoices
           </button>
+
+          <div className="mt-8 pt-6 border-t border-gray-100 dark:border-[#2d2e33]">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <LogOut className="w-4 h-4 mr-3" />
+              Sign Out
+            </button>
+          </div>
         </aside>
 
         {/* Settings Content Area */}
@@ -360,15 +383,30 @@ export default function SettingsPage() {
                       <div className="space-y-4">
                         <div>
                           <label className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 block">Current Password</label>
-                          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full bg-white dark:bg-[#0A0A0B] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C3FE2]/20 dark:text-white" />
+                          <div className="relative">
+                            <input type={showPasswords ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full bg-white dark:bg-[#0A0A0B] border border-gray-200 dark:border-gray-800 rounded-lg pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C3FE2]/20 dark:text-white" />
+                            <button type="button" onClick={() => setShowPasswords(!showPasswords)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                              {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </div>
                         <div>
                           <label className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 block">New Password</label>
-                          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-white dark:bg-[#0A0A0B] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C3FE2]/20 dark:text-white" />
+                          <div className="relative">
+                            <input type={showPasswords ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-white dark:bg-[#0A0A0B] border border-gray-200 dark:border-gray-800 rounded-lg pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C3FE2]/20 dark:text-white" />
+                            <button type="button" onClick={() => setShowPasswords(!showPasswords)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                              {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </div>
                         <div>
                           <label className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 block">Confirm New Password</label>
-                          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-white dark:bg-[#0A0A0B] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C3FE2]/20 dark:text-white" />
+                          <div className="relative">
+                            <input type={showPasswords ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-white dark:bg-[#0A0A0B] border border-gray-200 dark:border-gray-800 rounded-lg pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C3FE2]/20 dark:text-white" />
+                            <button type="button" onClick={() => setShowPasswords(!showPasswords)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                              {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </div>
                         
                         {pwdError && <p className="text-xs text-red-500 font-medium">{pwdError}</p>}
@@ -480,3 +518,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

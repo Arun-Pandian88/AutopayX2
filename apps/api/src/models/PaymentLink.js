@@ -24,6 +24,14 @@ const PaymentLink = sequelize.define('PaymentLink', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
   },
+  customer_name: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  customer_email: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   type: {
     type: DataTypes.ENUM('single', 'multiple'),
     defaultValue: 'single'

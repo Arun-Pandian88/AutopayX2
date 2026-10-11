@@ -1,14 +1,15 @@
 'use client';
 
-import { Wallet, Mail, Watch, PlayCircle, Shuffle, ChevronDown, Check, Loader2, Plug, CheckCircle2 } from 'lucide-react';
+import { Wallet, Mail, Watch, PlayCircle, Shuffle, ChevronDown, Check, Loader2, Plug, CheckCircle2, Shield, Info } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import PageBanner, { bannerConfigs } from '@/components/PageBanner';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function ConnectAccountsPage() {
   const [autoRouting, setAutoRouting] = useState(true);
-  const [paymentApp, setPaymentApp] = useState('Google Pay');
+  const [paymentApp, setPaymentApp] = useState('Paytm');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showGuide, setShowGuide] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Mailbox Connect State
@@ -21,6 +22,7 @@ export default function ConnectAccountsPage() {
   const [masterUpi, setMasterUpi] = useState('');
   const [upiNumber, setUpiNumber] = useState('');
   const [masterPayeeName, setMasterPayeeName] = useState('');
+  const [merchantId, setMerchantId] = useState('');
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [hasSavedDetails, setHasSavedDetails] = useState(false);
   const [upiList, setUpiList] = useState<{id: string, name: string}[]>([]);
@@ -31,7 +33,7 @@ export default function ConnectAccountsPage() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-settings`, {
+      const res = await fetch(`/api/payment-settings`, {
         credentials: 'include'
       });
       if (res.ok) {
@@ -44,6 +46,7 @@ export default function ConnectAccountsPage() {
           setMasterUpi(appSetting.master_upi_id || '');
           setUpiNumber(appSetting.upi_number || '');
           setMasterPayeeName(appSetting.payee_name || '');
+          setMerchantId(appSetting.merchant_id || '');
           setEmail(appSetting.mailbox_email || '');
           setIsConnected(appSetting.is_connected || false);
           setAutoRouting(appSetting.auto_routing_enabled ?? true);
@@ -52,6 +55,7 @@ export default function ConnectAccountsPage() {
           setMasterUpi('');
           setUpiNumber('');
           setMasterPayeeName('');
+          setMerchantId('');
           setEmail('');
           setIsConnected(false);
           setAutoRouting(true);
@@ -71,7 +75,7 @@ export default function ConnectAccountsPage() {
     if (!email || !password) return;
     setIsConnecting(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-settings/mailbox`, {
+      await fetch(`/api/payment-settings/mailbox`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -94,7 +98,7 @@ export default function ConnectAccountsPage() {
 
   const handleDisconnect = async () => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-settings/mailbox/disconnect`, {
+      await fetch(`/api/payment-settings/mailbox/disconnect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -114,7 +118,7 @@ export default function ConnectAccountsPage() {
   const handleSaveDetails = async () => {
     setIsSavingDetails(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-settings/master`, {
+      await fetch(`/api/payment-settings/master`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -124,7 +128,8 @@ export default function ConnectAccountsPage() {
           app_name: paymentApp,
           master_upi_id: masterUpi,
           upi_number: upiNumber,
-          payee_name: masterPayeeName
+          payee_name: masterPayeeName,
+          merchant_id: merchantId
         })
       });
       setHasSavedDetails(true);
@@ -139,7 +144,7 @@ export default function ConnectAccountsPage() {
 
   const saveRoutingToServer = async (newList: any[], routingEnabled: boolean) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-settings/routing`, {
+      await fetch(`/api/payment-settings/routing`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -325,15 +330,45 @@ export default function ConnectAccountsPage() {
                   </div>
                 )}
               </div>
-              <p className="text-[11px] font-medium text-gray-400 mt-2 flex items-center">
+              <p className="text-[11px] font-medium text-gray-400 mt-2 flex items-center mb-6">
                 <span className="w-1.5 h-1.5 bg-gray-300 rounded-full mr-2"></span>
                 Business alerts from <span className="font-mono ml-1 text-gray-500">{currentApp.alertEmail}</span>
               </p>
             </div>
 
+            {/* Connection Guide based on App */}
+            {paymentApp === 'Paytm' && showGuide && (
+              <div className="mb-8 border border-blue-100 bg-blue-50/30 rounded-2xl p-5 relative">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-blue-100/50">
+                  <div className="flex items-center text-blue-700 font-bold text-xs tracking-wider">
+                    <Shield className="w-4 h-4 mr-2" />
+                    PAYTM CONNECTION GUIDE
+                  </div>
+                  <button onClick={() => setShowGuide(false)} className="text-[10px] font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors">
+                    HIDE GUIDE
+                  </button>
+                </div>
+                <div className="space-y-3 text-sm text-gray-700 font-medium">
+                  <p className="font-bold text-[#1C1D22]">Paytm Business Direct Connection Setup Guide:</p>
+                  <ol className="list-decimal pl-4 space-y-2 text-sm text-gray-600">
+                    <li>Log in to the official <a href="https://dashboard.paytm.com" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">Paytm Business Dashboard</a>.</li>
+                    <li>In the left sidebar, click <strong className="text-gray-800">Developer Settings → API Keys</strong>.</li>
+                    <li>Copy your <strong className="text-gray-800">Merchant ID (MID)</strong> (e.g. MID1234567890) and paste it into the Merchant ID field below.</li>
+                    <li>Enter your Paytm registered phone number and business UPI ID (VPA) (e.g. <code className="bg-gray-100 px-1 rounded text-gray-800">merchant@paytm</code>).</li>
+                    <li>Click <strong className="text-gray-800">Save Details</strong> to complete Paytm setup.</li>
+                  </ol>
+                </div>
+              </div>
+            )}
+            {paymentApp === 'Paytm' && !showGuide && (
+               <button onClick={() => setShowGuide(true)} className="mb-6 flex items-center text-xs font-bold text-blue-600 hover:text-blue-700">
+                 <Info className="w-3.5 h-3.5 mr-1" /> Show Paytm Setup Guide
+               </button>
+            )}
+
             <div>
               <label className="block text-xs font-bold text-[#1C1D22] mb-2 uppercase tracking-wide">
-                {paymentApp} UPI ID <span className="text-red-500">*</span>
+                {paymentApp} UPI ID / VPA <span className="text-red-500">* REQUIRED</span>
               </label>
               <input 
                 type="text" 
@@ -346,13 +381,26 @@ export default function ConnectAccountsPage() {
 
             <div>
               <label className="block text-xs font-bold text-[#1C1D22] mb-2 uppercase tracking-wide">
-                Mobile Number / UPI Number <span className="text-red-500">*</span>
+                REGISTERED MOBILE NUMBER <span className="text-red-500">* REQUIRED</span>
               </label>
               <input 
                 type="text" 
                 value={upiNumber}
                 onChange={(e) => setUpiNumber(e.target.value)}
                 placeholder="e.g. 9876543210"
+                className="w-full bg-[#F4F5F9] border border-transparent rounded-xl px-4 py-3.5 text-sm text-[#1C1D22] font-bold focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-100 transition-all outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#1C1D22] mb-2 uppercase tracking-wide">
+                MERCHANT ID (MID / MC) <span className={paymentApp === 'Paytm' ? "text-red-500" : "text-gray-400 font-normal lowercase"}>{paymentApp === 'Paytm' ? "* REQUIRED" : "(Optional)"}</span>
+              </label>
+              <input 
+                type="text" 
+                value={merchantId}
+                onChange={(e) => setMerchantId(e.target.value)}
+                placeholder={paymentApp === 'Paytm' ? "e.g. KEA...399568" : "e.g. 5411"}
                 className="w-full bg-[#F4F5F9] border border-transparent rounded-xl px-4 py-3.5 text-sm text-[#1C1D22] font-bold focus:ring-2 focus:ring-indigo-500/30 focus:bg-white focus:border-indigo-100 transition-all outline-none"
               />
             </div>
@@ -392,7 +440,7 @@ export default function ConnectAccountsPage() {
                 <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-4">Auto-Generated Secure QR</h4>
                 <div className="bg-white p-3 rounded-xl shadow-sm border border-indigo-100 mb-4">
                   <QRCodeSVG 
-                    value={`upi://pay?pa=${masterUpi}&pn=${masterPayeeName || 'AutoPayX merchant'}&cu=INR`}
+                    value={`upi://pay?pa=${masterUpi}&pn=${masterPayeeName || 'AutoPayX merchant'}&cu=INR${merchantId ? `&mc=${merchantId}` : ''}`}
                     size={160}
                     level="Q"
                     includeMargin={false}

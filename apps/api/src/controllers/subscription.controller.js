@@ -1,6 +1,7 @@
 const Subscription = require('../models/Subscription');
 const Plan = require('../models/Plan');
 const Notification = require('../models/Notification');
+const Transaction = require('../models/Transaction');
 
 // Get current user's subscription + plan + usage
 exports.getMySubscription = async (req, res, next) => {
@@ -160,51 +161,48 @@ exports.markRead = async (req, res, next) => {
 };
 
 // Subscribe to a plan (for merchants)
-exports.subscribeToPlan = async (req, res, next) => {
+// Initiate subscription (creates a mock intent for now)
+exports.initiateSubscription = async (req, res, next) => {
   try {
     const { plan_id } = req.body;
-
     const plan = await Plan.findByPk(plan_id);
     if (!plan || plan.status !== 'active') {
       return res.status(404).json({ message: 'Plan not found or inactive.' });
     }
-
-    // Cancel any existing active subscription
-    await Subscription.update(
-      { status: 'cancelled' },
-      { where: { user_id: req.user.id, status: 'active' } }
-    );
-
-    // Calculate period end
-    const now = new Date();
-    const periodEnd = new Date(now);
-    if (plan.interval === 'monthly') {
-      periodEnd.setMonth(periodEnd.getMonth() + 1);
-    } else {
-      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-    }
-
-    // Create new subscription
-    const sub = await Subscription.create({
+    
+    // Create a transaction in DB
+    const txn_id = 'sub_' + require('crypto').randomBytes(8).toString('hex');
+    const order_id = 'plan_upgrade_' + plan_id;
+    
+    await Transaction.create({
       user_id: req.user.id,
-      plan_id: plan.id,
-      qr_codes_used: 0,
-      transactions_used: 0,
-      current_period_start: now,
-      current_period_end: periodEnd,
-      status: 'active',
+      txn_id,
+      order_id,
+      amount: plan.price,
+      status: 'processing',
+      gateway_app: 'AutoPayX Platform',
+      upi_id: 'autopayx@upi'
     });
 
-    // Send welcome notification
-    await Notification.create({
-      user_id: req.user.id,
-      type: 'info',
-      title: `Subscribed to ${plan.name}!`,
-      message: `Welcome to the ${plan.name} plan. Your subscription is active until ${periodEnd.toLocaleDateString()}.`,
-    });
-
-    res.json({ success: true, data: sub });
+    res.json({ success: true, data: { txn_id, plan_name: plan.name, amount: plan.price } });
   } catch (error) {
     next(error);
+  }
+};
+
+exports.getSubscriptionStatus = async (req, res, next) => {
+  try {
+    const { txn_id } = req.params;
+    const txn = await Transaction.findOne({ where: { txn_id, user_id: req.user.id } });
+    
+    if (!txn) return res.status(404).json({ success: false });
+    
+    if (txn.status === 'success') {
+      res.json({ success: true, status: 'success' });
+    } else {
+      res.json({ success: true, status: 'processing' });
+    }
+  } catch (err) {
+    next(err);
   }
 };

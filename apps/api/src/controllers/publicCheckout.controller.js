@@ -40,11 +40,15 @@ exports.getCheckoutDetails = async (req, res, next) => {
 
     const upiId = paymentSetting?.master_upi_id || null;
     const payeeName = paymentSetting?.payee_name || merchant?.business_name || merchant?.name || 'Merchant';
+    const merchantId = paymentSetting?.merchant_id || null;
 
     // Build UPI deep link for QR code
     let upiDeepLink = null;
     if (upiId) {
       upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${link.amount}&cu=INR&tn=${encodeURIComponent(link.title)}`;
+      if (merchantId) {
+        upiDeepLink += `&mc=${encodeURIComponent(merchantId)}`;
+      }
     }
 
     res.json({
@@ -55,6 +59,8 @@ exports.getCheckoutDetails = async (req, res, next) => {
         amount: parseFloat(link.amount),
         currency: 'INR',
         type: link.type,
+        customer_name: link.customer_name,
+        customer_email: link.customer_email,
         merchant: {
           name: merchant?.name,
           business_name: merchant?.business_name
@@ -91,6 +97,13 @@ exports.initiatePayment = async (req, res, next) => {
       return res.status(410).json({ success: false, message: 'This payment link is no longer active' });
     }
 
+    // Fetch payment setting to know which app is being used
+    const paymentSetting = await PaymentSetting.findOne({
+      where: { user_id: link.user_id }
+    });
+    const gateway_app = paymentSetting ? paymentSetting.app_name : 'Unknown';
+    const upi_id = paymentSetting ? paymentSetting.master_upi_id : null;
+
     // Generate unique txn_id and order_id
     const txn_id = 'txn_' + crypto.randomBytes(12).toString('hex');
     const order_id = 'ord_' + crypto.randomBytes(8).toString('hex');
@@ -105,18 +118,12 @@ exports.initiatePayment = async (req, res, next) => {
       currency: 'INR',
       status: 'processing',
       payment_method: 'UPI',
+      gateway_app,
+      upi_id
     });
 
-    // If single-use link, mark as inactive after first use
-    if (link.type === 'single') {
-      link.status = 'inactive';
-      await link.save();
-    }
-
     // --- AUTOMATIC VERIFICATION DELEGATED TO IMAP WORKER ---
-    // The transaction status remains 'processing' until the IMAP worker
-    // detects a matching bank email with the UTR and amount.
-
+    // The transaction status remains 'processing' until the IMAP worker detects a matching bank email with the UTR and amount.
 
     res.status(201).json({
       success: true,
@@ -153,6 +160,35 @@ exports.checkStatus = async (req, res, next) => {
         status: transaction.status,
       }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+
+
+// POST /api/pay/:link_id/simulate/:txn_id - DEMO PURPOSES ONLY
+exports.simulatePayment = async (req, res, next) => {
+  try {
+    const { txn_id } = req.params;
+    const transaction = await Transaction.findOne({ where: { txn_id } });
+    
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+    
+    if (transaction.status === 'success') {
+      return res.json({ success: true, message: 'Already paid' });
+    }
+
+    // Fake Verification
+    transaction.status = 'success';
+    transaction.utr = 'DEMO' + Math.floor(10000000 + Math.random() * 90000000);
+    await transaction.save();
+
+    res.json({ success: true, message: 'Payment simulated successfully' });
   } catch (error) {
     next(error);
   }

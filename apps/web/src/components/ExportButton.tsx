@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Download, FileJson, FileText, FileSpreadsheet } from 'lucide-react';
 
 export default function ExportButton() {
+  const pathname = usePathname();
+  const restrictedPaths = ['/dashboard/settings', '/dashboard/connect', '/dashboard/plans', '/dashboard/config', '/docs'];
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -23,7 +27,7 @@ export default function ExportButton() {
     setIsExporting(true);
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/transactions`, {
+      const res = await fetch(`/api/transactions`, {
         credentials: 'include'
       });
       const data = await res.json();
@@ -89,6 +93,10 @@ export default function ExportButton() {
       setIsExporting(false);
     }
   };
+
+  if (restrictedPaths.includes(pathname)) {
+    return null;
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>

@@ -30,7 +30,7 @@ export default function PlansManagement() {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/superadmin/plans`, {
+      const res = await fetch(`/api/superadmin/plans`, {
         credentials: 'include',
       });
       if (res.ok) {
@@ -62,14 +62,14 @@ export default function PlansManagement() {
 
       let res;
       if (editingId) {
-        res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/superadmin/plans/${editingId}`, {
+        res = await fetch(`/api/superadmin/plans/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/superadmin/plans`, {
+        res = await fetch(`/api/superadmin/plans`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -112,7 +112,7 @@ export default function PlansManagement() {
     setIsDeleting(true);
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/superadmin/plans/${deleteModalId}`, {
+      const res = await fetch(`/api/superadmin/plans/${deleteModalId}`, {
         method: 'DELETE',
         credentials: 'include',
       });

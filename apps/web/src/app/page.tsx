@@ -9,7 +9,7 @@ export default function LandingPage() {
   const [loadingPlans, setLoadingPlans] = useState(true);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/dashboard/plans`)
+    fetch(`/api/dashboard/plans`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {

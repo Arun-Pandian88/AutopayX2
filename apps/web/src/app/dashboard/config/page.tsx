@@ -21,7 +21,7 @@ export default function ConfigPage() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/config`, {
+      const res = await fetch(`/api/config`, {
         credentials: 'include'
       });
       if (res.ok) {
@@ -40,7 +40,7 @@ export default function ConfigPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/config`, {
+      await fetch(`/api/config`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

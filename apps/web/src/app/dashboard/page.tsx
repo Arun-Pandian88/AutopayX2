@@ -32,8 +32,8 @@ export default function DashboardOverview() {
     const fetchData = async () => {
       try {
         const [userRes, statsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/dashboard/me`, { credentials: 'include' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/dashboard/stats?filter=${encodeURIComponent(dateFilter)}`, { credentials: 'include' })
+          fetch(`/api/dashboard/me`, { credentials: 'include' }),
+          fetch(`/api/dashboard/stats?filter=${encodeURIComponent(dateFilter)}`, { credentials: 'include' })
         ]);
         if (userRes.ok) {
           const u = await userRes.json();

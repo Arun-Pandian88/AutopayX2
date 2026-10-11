@@ -44,6 +44,10 @@ const Transaction = sequelize.define('Transaction', {
     type: DataTypes.STRING,
     defaultValue: 'UPI'
   },
+  gateway_app: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   upi_id: {
     type: DataTypes.STRING,
     allowNull: true

@@ -19,7 +19,7 @@ export default function WebhooksPage() {
 
   const fetchEndpoints = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/webhooks`, {
+      const res = await fetch(`/api/webhooks`, {
         credentials: 'include'
       });
       if (res.ok) {
@@ -38,8 +38,8 @@ export default function WebhooksPage() {
     setSaving(true);
     try {
       const url = isEditing 
-        ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/webhooks/${formData.id}`
-        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/webhooks`;
+        ? `/api/webhooks/${formData.id}`
+        : `/api/webhooks`;
       
       const method = isEditing ? 'PUT' : 'POST';
 
@@ -66,7 +66,7 @@ export default function WebhooksPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this webhook endpoint?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/webhooks/${id}`, {
+      const res = await fetch(`/api/webhooks/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });

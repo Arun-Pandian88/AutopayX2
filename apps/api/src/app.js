@@ -48,6 +48,27 @@ app.use(helmet({
   xssFilter: true, // Basic XSS protection
 }));
 
+// Middlewares (CORS must be before rate limiters so 429s get CORS headers)
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:8000',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+    origin: function(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://192.168.') || origin.startsWith('http://10.')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS (Bank-level strict origin policy)'));
+      }
+    },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 // Strict Global Rate limiting (DDoS protection)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 mins
@@ -61,26 +82,7 @@ app.use('/api', limiter);
 // Prevent HTTP Param Pollution
 app.use(hpp());
 
-// Middlewares
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:8000',
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS (Bank-level strict origin policy)'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+// (CORS moved above rate limiter)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());

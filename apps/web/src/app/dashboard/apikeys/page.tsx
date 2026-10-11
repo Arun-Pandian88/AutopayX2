@@ -35,7 +35,7 @@ export default function ApiKeysPage() {
 
   const fetchKeys = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/apikeys`, {
+      const res = await fetch(`/api/apikeys`, {
         credentials: 'include'
       });
       if (res.ok) {
@@ -63,7 +63,7 @@ export default function ApiKeysPage() {
 
   const handleGenerateNew = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/apikeys/generate`, {
+      const res = await fetch(`/api/apikeys/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -86,7 +86,7 @@ export default function ApiKeysPage() {
 
     if (modalAction.type === 'delete') {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/apikeys/${modalAction.id}`, {
+        const res = await fetch(`/api/apikeys/${modalAction.id}`, {
           method: 'DELETE',
           credentials: 'include'
         });
@@ -99,7 +99,7 @@ export default function ApiKeysPage() {
       }
     } else if (modalAction.type === 'regenerate') {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/apikeys/generate`, {
+        const res = await fetch(`/api/apikeys/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

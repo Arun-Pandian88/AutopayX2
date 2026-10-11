@@ -26,7 +26,7 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/superadmin/stats`, {
+        const res = await fetch(`/api/superadmin/stats`, {
           credentials: 'include',
         });
         

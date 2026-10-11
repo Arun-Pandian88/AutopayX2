@@ -29,7 +29,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/dashboard/register`, {
+      const res = await fetch(`/api/dashboard/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

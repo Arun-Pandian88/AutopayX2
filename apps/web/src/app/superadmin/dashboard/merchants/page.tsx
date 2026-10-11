@@ -79,7 +79,7 @@ export default function MerchantsManagement() {
 
   const fetchMerchants = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/superadmin/merchants`, {
+      const res = await fetch(`/api/superadmin/merchants`, {
         credentials: 'include',
       });
       if (res.ok) {
@@ -108,7 +108,7 @@ export default function MerchantsManagement() {
     setIsUpdating(true);
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/superadmin/merchants/${confirmModal.merchantId}/status`, {
+      const res = await fetch(`/api/superadmin/merchants/${confirmModal.merchantId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, Phone, Loader2 } from 'lucide-react';
+import { Check, Phone, Loader2, X, ShieldCheck, Timer } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useUser } from '@/context/UserContext';
 import PageBanner, { bannerConfigs } from '@/components/PageBanner';
 
@@ -10,13 +11,17 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [checkoutPlan, setCheckoutPlan] = useState<any>(null);
+  const [txnId, setTxnId] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState(300);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [plansRes, subRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/dashboard/plans`, { credentials: 'include' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/subscription/my`, { credentials: 'include' })
+          fetch(`/api/dashboard/plans`, { credentials: 'include' }),
+          fetch(`/api/subscription/my`, { credentials: 'include' })
         ]);
 
         if (plansRes.ok) {
@@ -37,28 +42,69 @@ export default function PlansPage() {
     fetchData();
   }, []);
 
-  const handleSubscribe = async (planId: string) => {
-    if (!confirm('Are you sure you want to subscribe to this plan?')) return;
-
+  const handleSubscribe = async (plan: any) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/subscription/subscribe`, {
+      const res = await fetch(`/api/subscription/initiate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ plan_id: planId }),
+        body: JSON.stringify({ plan_id: plan.id }),
       });
-
-      if (res.ok) {
-        alert('Subscribed successfully!');
-        window.location.reload(); // Quick refresh
+      const json = await res.json();
+      if (json.success) {
+        setTxnId(json.data.txn_id);
+        setCheckoutPlan(plan);
+        setTimeLeft(300);
       } else {
-        const data = await res.json();
-        alert(data.message || 'Failed to subscribe');
+        alert(json.message || 'Failed to initiate checkout');
       }
     } catch (err) {
-      console.error(err);
-      alert('An error occurred');
+      alert('Error initiating checkout');
     }
+  };
+
+  
+  useEffect(() => {
+    if (!checkoutPlan || !txnId || success) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCheckoutPlan(null);
+          alert('Payment session expired');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const poller = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/subscription/status/${txnId}`, {
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success && json.status === 'success') {
+          setSuccess(true);
+          clearInterval(poller);
+          setTimeout(() => window.location.reload(), 3000);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 2000);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(poller);
+    };
+  }, [checkoutPlan, txnId, success]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   if (loading) {
@@ -174,7 +220,7 @@ export default function PlansPage() {
                 </button>
               ) : (
                 <button 
-                  onClick={() => !isCurrent && handleSubscribe(plan.id)}
+                  onClick={() => !isCurrent && handleSubscribe(plan)}
                   disabled={isCurrent}
                   className={`w-full font-bold py-3 px-4 rounded-xl transition-colors shadow-sm ${
                     isCurrent 
@@ -189,6 +235,65 @@ export default function PlansPage() {
           );
         })}
         
+
+      {/* Checkout Modal */}
+      {checkoutPlan && !success && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-[#F8F9FA]">
+              <div>
+                <h3 className="text-xl font-black text-[#1C1D22]">Upgrade to {checkoutPlan.name}</h3>
+                <p className="text-xs text-gray-500 font-medium">Complete your payment securely</p>
+              </div>
+              <button onClick={() => setCheckoutPlan(null)} className="text-gray-400 hover:text-gray-900 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-8 flex flex-col items-center">
+              <div className="text-center mb-6">
+                <p className="text-sm text-gray-500 font-medium mb-1">Amount to pay</p>
+                <h2 className="text-4xl font-black text-[#6C3FE2]">?{checkoutPlan.price}</h2>
+              </div>
+              
+              <div className="bg-white p-4 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 mb-6">
+                <QRCodeSVG
+                  value={`upi://pay?pa=autopayx@upi&pn=AutoPayX&am=${checkoutPlan.price}&cu=INR&tn=Upgrade to ${checkoutPlan.name}`}
+                  size={180}
+                  level="H"
+                  includeMargin={false}
+                />
+              </div>
+              
+              <p className="text-xs font-medium text-gray-400 mb-6 text-center px-4">
+                Scan this QR code with any UPI app (GPay, PhonePe, Paytm) to complete the payment.
+              </p>
+              
+              <div className="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-xl border border-gray-100 flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" /> Waiting for payment... <span className="ml-2 text-red-500 flex items-center"><Timer className="w-4 h-4 mr-1" /> {formatTime(timeLeft)}</span>
+              </div>
+            </div>
+            
+            <div className="py-3 bg-gray-50 border-t border-gray-100 text-center flex items-center justify-center gap-1.5 text-xs text-gray-500 font-bold">
+              <ShieldCheck className="w-4 h-4 text-green-600" /> Secured by AutoPayX
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {success && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] p-10 flex flex-col items-center max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-500">
+            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 relative">
+               <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-20"></div>
+               <Check className="w-10 h-10 text-green-600 relative z-10" strokeWidth={3} />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900 mb-2">Payment Verified!</h2>
+            <p className="text-gray-500 text-center text-sm font-medium">Your plan has been upgraded successfully. Reloading dashboard...</p>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

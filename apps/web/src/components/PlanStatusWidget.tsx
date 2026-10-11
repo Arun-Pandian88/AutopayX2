@@ -16,7 +16,7 @@ export default function PlanStatusWidget() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/subscription/my`, {
+        const res = await fetch(`/api/subscription/my`, {
           credentials: 'include'
         });
         if (res.ok) {

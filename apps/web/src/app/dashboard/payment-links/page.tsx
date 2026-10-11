@@ -5,7 +5,7 @@ import { Link as LinkIcon, Plus, Copy, CheckCircle2, Search, AlertCircle, ArrowU
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function PaymentLinksPage() {
-  const [view, setView] = useState<'list' | 'create' | 'test-checkout' | 'success'>('list');
+  const [view, setView] = useState<'list' | 'create' | 'success'>('list');
   const [links, setLinks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,9 +20,7 @@ export default function PaymentLinksPage() {
   const [createdLink, setCreatedLink] = useState<any>(null);
   const [realUpiId, setRealUpiId] = useState('test@upi');
   const [realPayeeName, setRealPayeeName] = useState('TestMerchant');
-  const [testTxnId, setTestTxnId] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [paymentMethodTab, setPaymentMethodTab] = useState<'qr' | 'upi_id' | 'upi_app'>('qr');
 
   // Modal & Toast State
   const [deleteModal, setDeleteModal] = useState<{ id: string, title: string } | null>(null);
@@ -34,7 +32,7 @@ export default function PaymentLinksPage() {
 
   const fetchLinks = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-links`, {
+      const res = await fetch(`/api/payment-links`, {
         credentials: 'include'
       });
       if (res.ok) {
@@ -54,14 +52,16 @@ export default function PaymentLinksPage() {
     
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-links`, {
+      const res = await fetch(`/api/payment-links`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           title: description,
           amount: parseFloat(amount),
-          type: 'single'
+          type: 'single',
+          customer_name: customerName,
+          customer_email: customerEmail
         })
       });
       if (res.ok) {
@@ -71,7 +71,7 @@ export default function PaymentLinksPage() {
         
         // Fetch Real UPI ID for the QR code
         try {
-          const resSettings = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-settings`, { credentials: 'include' });
+          const resSettings = await fetch(`/api/payment-settings`, { credentials: 'include' });
           if (resSettings.ok) {
             const settings = await resSettings.json();
             if (settings && settings.length > 0) {
@@ -81,7 +81,7 @@ export default function PaymentLinksPage() {
           }
         } catch (e) {}
 
-        setView('test-checkout');
+        setView('success');
       }
     } catch (err) {
       console.error(err);
@@ -96,69 +96,35 @@ export default function PaymentLinksPage() {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    showToast('Copied to clipboard!');
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text);
+      showToast('Copied to clipboard!');
+    } else {
+      // Fallback for non-https / mobile local network dev
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Copied to clipboard!');
+      } catch (error) {
+        console.error('Fallback copy failed', error);
+        showToast('Failed to copy. Please select and copy manually.');
+      }
+      textArea.remove();
+    }
   };
 
-  // Trigger real-time backend verification loop for test-checkout
-  useEffect(() => {
-    if (view === 'test-checkout' && createdLink) {
-      let interval: any;
-      let txnId = testTxnId;
-
-      const initiateAndPoll = async () => {
-        try {
-          if (!txnId) {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/pay/${createdLink.link_id}/initiate`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ customer_name: customerName || 'Walk-in customer', customer_email: customerEmail })
-            });
-            if (!res.ok) {
-              const text = await res.text();
-              console.error("Initiate error:", text);
-              return;
-            }
-            const json = await res.json();
-            if (json.success) {
-              txnId = json.data.txn_id;
-              setTestTxnId(txnId);
-            }
-          }
-
-          if (txnId) {
-            interval = setInterval(async () => {
-              try {
-                const statusRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/pay/${createdLink.link_id}/status/${txnId}`);
-                if (!statusRes.ok) {
-                  const text = await statusRes.text();
-                  console.error("Status error:", text);
-                  return;
-                }
-                const statusJson = await statusRes.json();
-                if (statusJson.success && statusJson.data.status === 'success') {
-                  clearInterval(interval);
-                  setView('success');
-                }
-              } catch (err) {
-                console.error(err);
-              }
-            }, 2000);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      };
-
-      initiateAndPoll();
-      return () => { if (interval) clearInterval(interval); };
-    }
-  }, [view, createdLink]);
 
   const executeDelete = async () => {
     if (!deleteModal) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payment-links/${deleteModal.id}`, {
+      const res = await fetch(`/api/payment-links/${deleteModal.id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -178,7 +144,7 @@ export default function PaymentLinksPage() {
 
   // --- HEADER ---
   const Header = () => (
-    <div className="flex justify-between items-center mb-6">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
       <h1 className="text-2xl font-bold text-[#1C1D22]">Payment links</h1>
       <div className="flex gap-3">
         <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
@@ -313,7 +279,7 @@ export default function PaymentLinksPage() {
                     <ArrowUpRight className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 text-sm">FlowPay</h4>
+                    <h4 className="font-bold text-gray-900 text-sm">AutopayX</h4>
                     <p className="text-xs text-gray-500">Secure checkout</p>
                   </div>
                 </div>
@@ -340,188 +306,6 @@ export default function PaymentLinksPage() {
     );
   }
 
-  // --- TEST CHECKOUT VIEW (Screenshot 3) ---
-  if (view === 'test-checkout') {
-    return (
-      <div className="max-w-[1100px] mx-auto pb-12 pt-6 px-4 font-sans">
-        
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-[#1C1D22]">Checkout preview</h1>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => {
-                const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://autopay.in';
-                copyToClipboard(`${baseUrl}/pay/${createdLink?.link_id}`);
-              }}
-              className="px-4 py-2 bg-white text-[#1C1D22] border border-gray-200 text-sm font-bold rounded-lg hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
-            >
-              <Copy className="w-4 h-4" /> Copy link
-            </button>
-            <button 
-              onClick={() => {
-                setAmount('');
-                setDescription('');
-                setCustomerName('');
-                setCustomerEmail('');
-                setView('create');
-              }}
-              className="text-sm font-bold text-gray-600 hover:text-gray-900 px-2"
-            >
-              Start over
-            </button>
-          </div>
-        </div>
-        
-        <div className="flex flex-col lg:flex-row gap-6">
-          
-          {/* Left Summary Panel */}
-          <div className="flex-1 bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.02)]">
-            <div className="flex justify-between items-start mb-12">
-              <div>
-                <h4 className="font-bold text-[#1C1D22] text-sm">FlowPay checkout</h4>
-                <p className="text-xs text-gray-500 font-mono">{testTxnId || 'Initiating...'}</p>
-              </div>
-              <div className="bg-[#FFF4E5] text-[#B76E00] px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-                Awaiting payment...
-              </div>
-            </div>
-
-            <div className="text-center mb-12">
-              <p className="text-sm text-gray-500 font-medium mb-1">Amount due</p>
-              <h2 className="text-4xl font-black text-[#1C1D22] mb-2">₹{amount ? parseFloat(amount).toLocaleString() : '0'}</h2>
-              <p className="text-sm text-gray-500">{description}</p>
-            </div>
-
-            <div className="bg-[#F8F9FA] rounded-2xl p-6 space-y-4 mb-6">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Customer</span>
-                <span className="font-bold text-[#1C1D22]">{customerName || 'Walk-in customer'}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Payment ID</span>
-                <span className="font-bold text-[#1C1D22] font-mono">{testTxnId || '...'}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-500 font-medium">
-              Live Checkout URL active
-            </div>
-          </div>
-
-          {/* Right Payment Panel */}
-          <div className="flex-[1.2] bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.02)] flex flex-col">
-            <h3 className="font-bold text-[#1C1D22] mb-4">Choose how to pay</h3>
-            
-            <div className="flex p-1 bg-[#F4F5F9] rounded-xl mb-12">
-              <button 
-                onClick={() => setPaymentMethodTab('qr')}
-                className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${paymentMethodTab === 'qr' ? 'bg-[#1C1D22] text-white shadow-sm' : 'text-gray-600 hover:text-[#1C1D22]'}`}
-              >
-                <QrCode className="w-4 h-4" /> Scan QR
-              </button>
-              <button 
-                onClick={() => setPaymentMethodTab('upi_id')}
-                className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${paymentMethodTab === 'upi_id' ? 'bg-[#1C1D22] text-white shadow-sm' : 'text-gray-600 hover:text-[#1C1D22]'}`}
-              >
-                <LinkIcon className="w-4 h-4" /> UPI ID
-              </button>
-              <button 
-                onClick={() => setPaymentMethodTab('upi_app')}
-                className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${paymentMethodTab === 'upi_app' ? 'bg-[#1C1D22] text-white shadow-sm' : 'text-gray-600 hover:text-[#1C1D22]'}`}
-              >
-                <Smartphone className="w-4 h-4" /> UPI app
-              </button>
-            </div>
-
-            <div className="flex-1 flex flex-col items-center justify-center">
-              {paymentMethodTab === 'qr' && (
-                <>
-                  <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm mb-6 inline-block">
-                    <QRCodeSVG 
-                      value={`upi://pay?pa=${realUpiId}&pn=${realPayeeName}&am=${amount}&cu=INR`}
-                      size={200}
-                      level="Q"
-                      includeMargin={false}
-                    />
-                  </div>
-                  <h4 className="font-bold text-[#1C1D22] mb-1">Scan with any UPI app</h4>
-                  <p className="text-xs text-gray-500 mb-8">Google Pay • PhonePe • Paytm • BHIM</p>
-                  
-                  <button 
-                    disabled={true}
-                    className="w-full py-4 bg-[#141721] text-white font-bold rounded-xl flex items-center justify-center gap-2 opacity-80 cursor-wait mt-auto"
-                  >
-                    Scan QR to pay ₹{amount ? parseFloat(amount).toLocaleString() : '0'} <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-
-              {paymentMethodTab === 'upi_id' && (
-                <div className="w-full flex flex-col h-full">
-                  <div className="flex-1 flex flex-col justify-center">
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Enter your UPI ID</label>
-                    <div className="relative mb-4">
-                      <input 
-                        type="text" 
-                        placeholder="e.g. name@okhdfcbank"
-                        className="w-full pl-4 pr-10 py-4 bg-white border border-gray-200 rounded-xl text-[#1C1D22] text-sm focus:outline-none focus:ring-2 focus:ring-[#1C1D22]/10 focus:border-[#1C1D22] transition-all placeholder:text-gray-400 font-medium"
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
-                         <span className="text-green-500 hidden">✓</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">A payment request will be sent to your UPI app.</p>
-                  </div>
-                  <button 
-                    className="w-full py-4 bg-[#141721] text-white font-bold rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2 mt-auto shadow-md"
-                  >
-                    Pay ₹{amount ? parseFloat(amount).toLocaleString() : '0'} <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              {paymentMethodTab === 'upi_app' && (
-                <div className="w-full flex flex-col h-full">
-                  <div className="flex-1 flex flex-col justify-center gap-4">
-                    <a href={`upi://pay?pa=${realUpiId}&pn=${realPayeeName}&am=${amount}&cu=INR`} className="w-full p-4 border border-gray-200 rounded-2xl flex items-center justify-between hover:border-gray-300 hover:shadow-sm transition-all group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center p-2">
-                          <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="GPay" className="w-full h-full object-contain" />
-                        </div>
-                        <span className="font-bold text-gray-800">Google Pay</span>
-                      </div>
-                      <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-800 transition-colors" />
-                    </a>
-                    
-                    <a href={`upi://pay?pa=${realUpiId}&pn=${realPayeeName}&am=${amount}&cu=INR`} className="w-full p-4 border border-gray-200 rounded-2xl flex items-center justify-between hover:border-gray-300 hover:shadow-sm transition-all group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#5F259F] rounded-full shadow-sm border border-gray-100 flex items-center justify-center p-2">
-                          <span className="text-white font-black text-xs">Pê</span>
-                        </div>
-                        <span className="font-bold text-gray-800">PhonePe</span>
-                      </div>
-                      <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-800 transition-colors" />
-                    </a>
-
-                    <a href={`upi://pay?pa=${realUpiId}&pn=${realPayeeName}&am=${amount}&cu=INR`} className="w-full p-4 border border-gray-200 rounded-2xl flex items-center justify-between hover:border-gray-300 hover:shadow-sm transition-all group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#002970] rounded-full shadow-sm border border-gray-100 flex items-center justify-center p-1.5">
-                          <span className="text-white font-black text-[10px]">Paytm</span>
-                        </div>
-                        <span className="font-bold text-gray-800">Paytm</span>
-                      </div>
-                      <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-800 transition-colors" />
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-        </div>
-      </div>
-    );
-  }
 
   // --- SUCCESS VIEW (Screenshot 2) ---
   if (view === 'success') {
@@ -559,15 +343,24 @@ export default function PaymentLinksPage() {
             </div>
             <div className="flex justify-between items-center pt-2">
               <span className="text-gray-500 text-sm">Payment URL</span>
-              <button 
-                onClick={() => {
-                  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://autopay.in';
-                  copyToClipboard(`${baseUrl}/pay/${createdLink?.link_id}`);
-                }}
-                className="text-indigo-600 hover:text-indigo-800 font-bold text-sm flex items-center gap-1"
-              >
-                Copy Link <Copy className="w-3 h-3" />
-              </button>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text"
+                  readOnly
+                  value={typeof window !== 'undefined' ? `${window.location.origin}/pay/${createdLink?.link_id}` : `https://autopay.in/pay/${createdLink?.link_id}`}
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 font-mono w-56 focus:outline-none"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <button 
+                  onClick={() => {
+                    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://autopay.in';
+                    copyToClipboard(`${baseUrl}/pay/${createdLink?.link_id}`);
+                  }}
+                  className="px-3 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors"
+                >
+                  <Copy className="w-3 h-3" /> Copy
+                </button>
+              </div>
             </div>
           </div>
 
@@ -605,7 +398,7 @@ export default function PaymentLinksPage() {
         <div className="py-20 text-center text-gray-400 font-medium animate-pulse">Loading payment links...</div>
       ) : (
         <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.02)] overflow-hidden">
-          <table className="w-full text-left">
+          <div className="overflow-x-auto w-full"><table className="w-full text-left min-w-[600px]">
             <thead className="bg-[#F8F9FA] border-b border-gray-100">
               <tr>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Details</th>
@@ -628,8 +421,8 @@ export default function PaymentLinksPage() {
                         <span className="w-1.5 h-1.5 bg-[#0066FF] rounded-full mr-1.5 animate-pulse"></span> Active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#D7F1E2] text-[#008945] border border-[#008945]/20">
-                        <Check className="w-3 h-3 mr-1" /> Paid
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500 border border-gray-200">
+                        Inactive
                       </span>
                     )}
                   </td>
@@ -673,6 +466,7 @@ export default function PaymentLinksPage() {
               )}
             </tbody>
           </table>
+        </div>
         </div>
       )}
 

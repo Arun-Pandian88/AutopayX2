@@ -32,6 +32,10 @@ const PaymentSetting = sequelize.define('PaymentSetting', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  merchant_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   mailbox_email: {
     type: DataTypes.STRING,
     allowNull: true,

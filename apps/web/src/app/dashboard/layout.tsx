@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LayoutDashboard, Key, Activity, Settings, Webhook, Zap, Repeat, Landmark, Users, Search, Bell, Link as LinkIcon, RefreshCw, Palette, Gift, FileText, Terminal, Settings2, LifeBuoy } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import NotificationBell from '@/components/NotificationBell';
 import SignOutButton from '@/components/SignOutButton';
 import UserProfile from '@/components/UserProfile';
@@ -18,7 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex w-full bg-[#FAFAFC] dark:bg-[#0A0A0B] rounded-[32px] md:rounded-[40px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white dark:border-[#2d2e33] relative min-h-[90vh] transition-colors">
         
         {/* The Purple Floating Sidebar (Expandable on Hover) */}
-        <aside className="w-[88px] hover:w-[260px] transition-all duration-300 ease-in-out bg-[#6C3FE2] flex flex-col py-8 z-50 rounded-r-[40px] group absolute h-full md:relative md:h-auto overflow-hidden shadow-2xl md:shadow-none">
+        <aside className="hidden md:flex w-[88px] hover:w-[260px] transition-all duration-300 ease-in-out bg-[#6C3FE2] flex-col py-8 z-50 rounded-r-[40px] group relative h-auto overflow-hidden shadow-none">
           
           <div className="px-5 mb-12 flex items-center justify-center w-full">
             {/* Expanded state logo (hidden when collapsed, shown on hover) */}
@@ -114,12 +115,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden bg-gradient-to-br from-[#FAFAFC] to-[#F0F2F8] dark:from-[#0A0A0B] dark:to-[#1C1D22] pl-[88px] md:pl-0 transition-colors">
+        <main className="flex-1 flex flex-col h-full overflow-hidden bg-gradient-to-br from-[#FAFAFC] to-[#F0F2F8] dark:from-[#0A0A0B] dark:to-[#1C1D22] pb-24 md:pb-0 transition-colors relative">
           
           {/* Top Navigation Bar */}
-          <header className="h-24 px-10 flex items-center justify-between">
+          <header className="h-20 md:h-24 px-4 md:px-10 flex items-center justify-between">
             {/* Nav Links */}
-            <div className="flex items-center space-x-8">
+            <div className="md:hidden flex items-center">
+              <div className="w-8 h-8 bg-[#6C3FE2] rounded-xl flex items-center justify-center shrink-0 shadow-md">
+                <img src="/autopayx-logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+              </div>
+              <span className="ml-2 font-black text-[#1C1D22] dark:text-white text-lg tracking-tight">AutoPayX</span>
+            </div>
+            
+            {/* Desktop Nav Links */}
+            <div className="hidden md:flex items-center space-x-8">
               <Link href="#" className="flex items-center text-[#1C1D22] dark:text-white font-bold">
                 <LayoutDashboard className="w-4 h-4 mr-2" />
                 Dashboard
@@ -127,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-8">
+            <div className="hidden md:block flex-1 max-w-md mx-8">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-gray-400" />
@@ -160,9 +169,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto px-10 pb-10 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto px-4 md:px-10 pb-10 custom-scrollbar">
             {children}
           </div>
+          <MobileBottomNav />
 
         </main>
       </div>
