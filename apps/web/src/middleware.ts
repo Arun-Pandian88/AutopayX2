@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { updateSession } from '@/utils/supabase/middleware';
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token');
-  const userRole = request.cookies.get('user_role')?.value;
+export async function middleware(request: NextRequest) {
+  const { response, user: supabaseUser } = await updateSession(request);
+  const token = request.cookies.get('token')?.value || (supabaseUser ? 'sb-session' : null);
+  const userRole = request.cookies.get('user_role')?.value || supabaseUser?.user_metadata?.role;
   const path = request.nextUrl.pathname;
 
   // ─── Protected Routes: Dashboard (merchant) ───
@@ -11,7 +13,6 @@ export function middleware(request: NextRequest) {
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    // If superadmin tries to access merchant dashboard, redirect to superadmin dashboard
     if (userRole === 'superadmin') {
       return NextResponse.redirect(new URL('/superadmin/dashboard', request.url));
     }
@@ -22,7 +23,6 @@ export function middleware(request: NextRequest) {
     if (!token) {
       return NextResponse.redirect(new URL('/superadmin/login', request.url));
     }
-    // If merchant tries to access superadmin dashboard, redirect to merchant dashboard
     if (userRole && userRole !== 'superadmin') {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
@@ -45,7 +45,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

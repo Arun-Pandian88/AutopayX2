@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: Request) {
   const API_BASE_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+  // 1. Sign out Supabase auth session
   try {
-    // Notify the backend API to record the logout audit log
+    const supabase = createClient();
+    await supabase.auth.signOut();
+  } catch (sbErr) {}
+
+  // 2. Notify the backend API to record the logout audit log
+  try {
     await fetch(`${API_BASE_URL}/api/dashboard/logout`, {
       method: 'POST',
       headers: {

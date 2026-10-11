@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Zap, Mail, Lock, ArrowRight, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -19,6 +20,24 @@ export default function LoginPage() {
     setError('');
 
     try {
+      // 1. Try Supabase Auth
+      try {
+        const { data: sbData, error: sbError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (!sbError && sbData?.user) {
+          localStorage.setItem('userEmail', email);
+          document.cookie = 'user_role=merchant; path=/; max-age=2592000;';
+          router.push('/dashboard');
+          return;
+        }
+      } catch (sbErr) {
+        // Fallback to Express backend if Supabase Auth is not set up for this user
+      }
+
+      // 2. Fallback to API route
       const res = await fetch(`/api/dashboard/login`, {
         method: 'POST',
         headers: {
