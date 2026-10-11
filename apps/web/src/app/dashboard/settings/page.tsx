@@ -142,16 +142,17 @@ export default function SettingsPage() {
     }
   };
 
-    const handleLogout = async () => {
+  const handleLogout = async () => {
     try {
-      await fetch(`${API_URL}/api/dashboard/logout`, {
+      await fetch(`/api/dashboard/logout`, {
         method: 'POST',
         headers: { 'Accept': 'application/json' },
         credentials: 'include',
       });
     } catch (e) {}
     document.cookie = 'user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    window.location.href = '/login';
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    window.location.replace('/login');
   };
 
   const handleUpdatePassword = async () => {

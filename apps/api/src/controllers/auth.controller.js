@@ -196,14 +196,17 @@ exports.logout = async (req, res, next) => {
       });
     }
 
-    res.cookie('token', '', {
-      httpOnly: true,
-      expires: new Date(0)
-    });
-    res.cookie('user_role', '', {
-      httpOnly: false,
-      expires: new Date(0)
-    });
+    const cookieOptions = {
+      path: '/',
+      expires: new Date(0),
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    };
+
+    res.cookie('token', '', { ...cookieOptions, httpOnly: true });
+    res.clearCookie('token', { path: '/' });
+    res.cookie('user_role', '', { ...cookieOptions, httpOnly: false });
+    res.clearCookie('user_role', { path: '/' });
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
     next(error);

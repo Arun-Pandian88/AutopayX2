@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <UserProfile />
           </div>
 
-          <div className="flex-1 flex flex-col space-y-4 w-full px-5">
+          <div className="flex-1 flex flex-col space-y-4 w-full px-5 overflow-y-auto no-scrollbar">
             <Link href="/dashboard" className="flex items-center p-3 rounded-2xl bg-white text-[#6C3FE2] shadow-lg transition-transform hover:scale-105">
               <LayoutDashboard className="w-6 h-6 shrink-0" />
               <span className="ml-4 font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Dashboard</span>
@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="ml-4 font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Support</span>
             </Link>
 
-            <div className="mt-auto flex flex-col w-full">
+            <div className="mt-auto flex flex-col w-full pt-4">
               <div className="hidden group-hover:block mb-4 w-full">
                 <PlanStatusWidget />
               </div>
@@ -150,7 +150,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             {/* Right Controls */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               {/* Live / Test Mode Toggle */}
               <ModeToggle />
 
@@ -161,11 +161,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <NotificationBell />
 
               {/* Settings */}
-              <Link href="/dashboard/settings" className="w-10 h-10 bg-white dark:bg-[#1C1D22] rounded-full flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-gray-600 dark:text-gray-400 hover:text-[#6C3FE2] dark:hover:text-white transition-colors">
+              <Link href="/dashboard/settings" title="Settings" className="w-10 h-10 bg-white dark:bg-[#1C1D22] rounded-full flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-gray-600 dark:text-gray-400 hover:text-[#6C3FE2] dark:hover:text-white transition-colors">
                 <Settings className="w-4 h-4" />
               </Link>
 
               <ExportButton />
+
+              {/* Sign Out */}
+              <SignOutButton variant="header" />
             </div>
           </header>
 
@@ -190,6 +193,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(108, 63, 226, 0.4); 
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}} />
     </div>

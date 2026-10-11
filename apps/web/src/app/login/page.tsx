@@ -29,7 +29,14 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        if (!res.ok) {
+          throw new Error('API server connection failed (Status ' + res.status + '). Please check if backend is running.');
+        }
+      }
 
       if (!res.ok) {
         throw new Error(data.message || 'Login failed. Please check your credentials.');
