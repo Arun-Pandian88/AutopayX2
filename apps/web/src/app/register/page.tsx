@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Zap, Mail, Lock, User, Briefcase, ArrowRight, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -29,6 +30,31 @@ export default function RegisterPage() {
     }
 
     try {
+      // 1. Try Supabase Auth SignUp
+      try {
+        const { data: sbData, error: sbError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name,
+              business_name: businessName,
+              role: 'merchant',
+            },
+          },
+        });
+
+        if (!sbError && sbData?.user) {
+          localStorage.setItem('userEmail', email);
+          document.cookie = 'user_role=merchant; path=/; max-age=2592000;';
+          router.push('/dashboard');
+          return;
+        }
+      } catch (sbErr) {
+        // Fallback to Express backend if needed
+      }
+
+      // 2. Fallback to API route
       const res = await fetch(`/api/dashboard/register`, {
         method: 'POST',
         headers: {
@@ -39,7 +65,14 @@ export default function RegisterPage() {
         body: JSON.stringify({ name, business_name: businessName, email, password }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        if (!res.ok) {
+          throw new Error('API server connection failed (Status ' + res.status + '). Please check if backend is running.');
+        }
+      }
 
       if (!res.ok) {
         throw new Error(data.message || 'Registration failed. Please try again.');
