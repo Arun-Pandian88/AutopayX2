@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 type User = {
   id: string;
@@ -21,27 +22,33 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async (retries = 3) => {
+    const fetchUser = async () => {
       try {
-        const res = await fetch(`/api/dashboard/me`, {
-          credentials: 'include',
-        });
-        
+        // 1. Try Supabase Auth directly
+        const { data: { user: sbUser } } = await supabase.auth.getUser();
+        if (sbUser) {
+          setUser({
+            id: sbUser.id,
+            name: sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'Merchant',
+            email: sbUser.email || '',
+            role: sbUser.user_metadata?.role || 'merchant',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // 2. Fallback to /api/dashboard/me
+        const res = await fetch(`/api/dashboard/me`, { credentials: 'include' });
         if (res.ok) {
           const json = await res.json();
-          setUser(json.data);
-          setLoading(false);
-        } else {
-          // If 401 or other status, stop retrying and set loading false
-          setLoading(false);
+          if (json.data) {
+            setUser(json.data);
+          }
         }
-      } catch (err: any) {
-        if (retries > 0) {
-          setTimeout(() => fetchUser(retries - 1), 1000);
-        } else {
-          console.warn('Failed to fetch user (Server might be restarting).');
-          setLoading(false);
-        }
+      } catch (err) {
+        console.warn('User fetch notice:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
